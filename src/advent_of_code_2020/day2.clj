@@ -13,17 +13,13 @@
     {:policy   policy
      :password password}))
 
-(defn count-chars
-  [s]
-  (reduce (fn [result char]
-            (update result char (fnil inc 0))) 
-          {}
-          s))
 
 (defn valid-part1-password?
   [{:keys [policy password]}]
-  (let [chars-count (count-chars password)
-        policy-char-count (get chars-count (:char policy) 0)]
+  (let [policy-char (:char policy)
+        policy-char-count (->> password
+                               (filter #{policy-char})
+                               count)]
     (<= (:min policy) policy-char-count (:max policy))))
 
 (defn part1-solution
