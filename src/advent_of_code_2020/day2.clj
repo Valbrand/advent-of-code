@@ -33,7 +33,7 @@
 
 (defn parse-part2-line
   [raw-line]
-  (let [[[_ index1 index2 [char] password :as re-line]] (re-seq line-pattern raw-line)
+  (let [[_ index1 index2 [char] password] (re-find line-pattern raw-line)
         policy {:char   char
                 :index1 (dec (Integer/parseInt index1))
                 :index2 (dec (Integer/parseInt index2))}]
