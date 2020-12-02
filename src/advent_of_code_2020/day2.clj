@@ -6,7 +6,7 @@
 
 (defn parse-part1-line
   [raw-line]
-  (let [[[_ min max [char] password :as re-line]] (re-seq line-pattern raw-line)
+  (let [[_ min max [char] password] (re-find line-pattern raw-line)
         policy {:char char
                 :min  (Integer/parseInt min)
                 :max  (Integer/parseInt max)}]
