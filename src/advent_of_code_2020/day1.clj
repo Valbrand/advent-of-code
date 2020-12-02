@@ -1,10 +1,5 @@
 (ns advent-of-code-2020.day1
-  (:require [clojure.java.io :as java.io]))
-
-(defn read-input-lines
-  [path]
-  (with-open [rdr (java.io/reader path)]
-    (line-seq rdr)))
+  (:require [advent-of-code-2020.utils :as utils]))
 
 (defn pair-summing
   [goal ints]
@@ -23,9 +18,8 @@
 (defn find-pair
   []
   (let [path "resources/day1.txt"
-        result (with-open [rdr (java.io/reader path)]
-                 (->> rdr
-                      line-seq
+        result (utils/with-lines path
+                 (->> lines
                       (map #(Integer/parseInt %))
                       (pair-summing 2020)))]
     (if (some? result)
@@ -58,9 +52,8 @@
 (defn find-triad
   []
   (let [path "resources/day1.txt"
-        result (with-open [rdr (java.io/reader path)]
-                 (->> rdr
-                      line-seq
+        result (utils/with-lines path
+                 (->> lines
                       (map #(Integer/parseInt %))
                       (triad-summing 2020)))]
     (if (some? result)
@@ -75,3 +68,7 @@
     
     "triad"
     (find-triad)))
+
+(comment
+  (-main "pair")
+  (-main "triad"))
