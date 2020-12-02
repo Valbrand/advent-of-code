@@ -10,7 +10,7 @@
         policy {:char char
                 :min  (Integer/parseInt min)
                 :max  (Integer/parseInt max)}]
-    {:policy policy
+    {:policy   policy
      :password password}))
 
 (defn count-chars
@@ -41,7 +41,7 @@
         policy {:char   char
                 :index1 (dec (Integer/parseInt index1))
                 :index2 (dec (Integer/parseInt index2))}]
-    {:policy policy
+    {:policy   policy
      :password password}))
 
 (defn chars-at-policy-indices
