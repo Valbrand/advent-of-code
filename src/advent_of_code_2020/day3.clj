@@ -1,18 +1,22 @@
 (ns advent-of-code-2020.day3
   (:require [advent-of-code-2020.utils :as utils]))
 
+(defn content-at-index
+  [lines row column]
+  (let [row (nth lines row)
+        row-length (count row)]
+    (nth row (mod column row-length))))
+
+(def tree? #{\#})
+
 (defn trees-found-with-slope
   [lines {:keys [right-slope down-slope]}]
   (let [positions-to-check (->> (range 0 (count lines) down-slope)
                                 (map-indexed (fn [n row]
-                                               [row (* n right-slope)])))
-        position-contents (->> positions-to-check
-                               (map (fn [[row column]]
-                                      (let [row (nth lines row)
-                                            row-length (count row)]
-                                        (nth row (mod column row-length))))))]
-    (->> position-contents
-         (filter #{\#})
+                                               [row (* n right-slope)])))]
+    (->> positions-to-check
+         (map (partial apply content-at-index lines))
+         (filter tree?)
          count)))
 
 (defn slope
@@ -42,9 +46,8 @@
   []
   (let [path "resources/day3.txt"]
     (utils/with-lines path
-      (part1-solution lines)
-      (part2-solution lines))))
+      (println (str "Part1: " (part1-solution lines)))
+      (println (str "Part2: " (part2-solution lines))))))
 
 (comment
-  (range 0 10 2)
   (day-solution))
