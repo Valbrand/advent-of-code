@@ -1,5 +1,6 @@
 (ns advent-of-code-2020.utils
-  (:require [clojure.java.io :as java.io]))
+  (:require [clojure.java.io :as java.io]
+            [clojure.pprint :as pp]))
 
 (defmacro with-lines
   [path & body]
@@ -7,7 +8,17 @@
      (let [~'lines (line-seq rdr#)]
        ~@body)))
 
+(defmacro tap
+  [x]
+  (let [x-raw (with-out-str (pp/pprint (macroexpand x)))]
+    `(do
+       (print ~x-raw)
+       (pp/pprint ~x)
+       ~x)))
+
 (comment
+  (-> {:a 1} keys set tap identity tap)
+  (macroexpand '(tap (-> {:a 1} keys set)))
   (macroexpand-1
    '(with-lines "resources/day1.txt"
       (->> lines
