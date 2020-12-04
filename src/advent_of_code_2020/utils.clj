@@ -16,6 +16,10 @@
        (pp/pprint ~x)
        ~x)))
 
+(defn parse-int
+  [str]
+  (Integer/parseInt str))
+
 (comment
   (-> {:a 1} keys set tap identity tap)
   (macroexpand '(tap (-> {:a 1} keys set)))
