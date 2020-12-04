@@ -46,8 +46,9 @@
   []
   (let [path "resources/day3.txt"]
     (utils/with-lines path
-      (println (str "Part1: " (part1-solution lines)))
-      (println (str "Part2: " (part2-solution lines))))))
+      (let [lines-vector (vec lines)]
+        (println (str "Part1: " (part1-solution lines-vector)))
+        (println (str "Part2: " (part2-solution lines-vector)))))))
 
 (comment
-  (day-solution))
+  (time (day-solution)))
