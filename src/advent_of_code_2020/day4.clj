@@ -45,7 +45,7 @@
          (filter (partial valid-passport? required-fields optional-fields))
          count)))
 
-(defn interval-valid?
+(defn inside-interval?
   [min max]
   #(<= min (utils/parse-int %) max))
 
@@ -53,8 +53,8 @@
   #"(\d+)(cm|in)")
 
 (def height-validators
-  {"cm" (interval-valid? 150 193)
-   "in" (interval-valid? 59 76)})
+  {"cm" (inside-interval? 150 193)
+   "in" (inside-interval? 59 76)})
 
 (defn valid-height?
   [height]
@@ -73,9 +73,9 @@
   #{"amb" "blu" "brn" "gry" "grn" "hzl" "oth"})
 
 (def field-validations
-  {"byr" (interval-valid? 1920 2002)
-   "iyr" (interval-valid? 2010 2020)
-   "eyr" (interval-valid? 2020 2030)
+  {"byr" (inside-interval? 1920 2002)
+   "iyr" (inside-interval? 2010 2020)
+   "eyr" (inside-interval? 2020 2030)
    "hgt" valid-height?
    "hcl" (matches-pattern? hair-color-pattern)
    "ecl" valid-eye-color?

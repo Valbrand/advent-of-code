@@ -2,7 +2,7 @@
   (:require [clojure.java.io :as java.io]
             [clojure.pprint :as pp]))
 
-(defmacro with-lines
+(defn with-lines
   [path f]
   (with-open [rdr (java.io/reader path)]
     (let [lines (line-seq rdr)]
