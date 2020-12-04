@@ -19,9 +19,10 @@
   []
   (let [path "resources/day1.txt"
         result (utils/with-lines path
-                 (->> lines
-                      (map #(Integer/parseInt %))
-                      (pair-summing 2020)))]
+                 (fn [lines]
+                   (->> lines
+                        (map #(Integer/parseInt %))
+                        (pair-summing 2020))))]
     (if (some? result)
       (print (apply * result))
       (print "No results"))))
@@ -53,9 +54,10 @@
   []
   (let [path "resources/day1.txt"
         result (utils/with-lines path
-                 (->> lines
-                      (map #(Integer/parseInt %))
-                      (triad-summing 2020)))]
+                 (fn [lines]
+                   (->> lines
+                        (map #(Integer/parseInt %))
+                        (triad-summing 2020))))]
     (if (some? result)
       (print (apply * result))
       (print "No results"))))

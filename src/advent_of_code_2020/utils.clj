@@ -3,10 +3,10 @@
             [clojure.pprint :as pp]))
 
 (defmacro with-lines
-  [path & body]
-  `(with-open [rdr# (java.io/reader ~path)]
-     (let [~'lines (line-seq rdr#)]
-       ~@body)))
+  [path f]
+  (with-open [rdr (java.io/reader path)]
+    (let [lines (line-seq rdr)]
+       (f lines))))
 
 (defmacro tap
   [x]
@@ -22,8 +22,4 @@
 
 (comment
   (-> {:a 1} keys set tap identity tap)
-  (macroexpand '(tap (-> {:a 1} keys set)))
-  (macroexpand-1
-   '(with-lines "resources/day1.txt"
-      (->> lines
-           (map identity)))))
+  (macroexpand '(tap (-> {:a 1} keys set))))

@@ -26,10 +26,11 @@
   []
   (let [path "resources/day2.txt"]
     (utils/with-lines path
-      (->> lines
-           (map parse-part1-line)
-           (filter valid-part1-password?)
-           count))))
+      (fn [lines]
+        (->> lines
+             (map parse-part1-line)
+             (filter valid-part1-password?)
+             count)))))
 
 (defn parse-part2-line
   [raw-line]
@@ -58,10 +59,11 @@
   []
   (let [path "resources/day2.txt"]
     (utils/with-lines path
-      (->> lines
-           (map parse-part2-line)
-           (filter valid-part2-password?)
-           count))))
+      (fn [lines]
+        (->> lines
+             (map parse-part2-line)
+             (filter valid-part2-password?)
+             count)))))
 
 (comment
   (part1-solution)

@@ -107,8 +107,9 @@
 (defn day-solution
   []
   (utils/with-lines "resources/day4.txt"
-    (utils/tap (part1-solution lines))
-    (utils/tap (part2-solution lines)))
+    (fn [lines]
+      (utils/tap (part1-solution lines))
+      (utils/tap (part2-solution lines))))
   nil)
 
 (comment
