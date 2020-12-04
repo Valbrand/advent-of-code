@@ -10,7 +10,7 @@
 
 (defmacro tap
   [x]
-  (let [x-raw (with-out-str (pp/pprint (macroexpand x)))]
+  (let [x-raw (with-out-str (pp/pprint x))]
     `(do
        (print ~x-raw)
        (pp/pprint ~x)
