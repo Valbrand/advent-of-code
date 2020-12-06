@@ -94,16 +94,15 @@
 (defn find-gaps'
   [seat-ids]
   (let [seat-ids (set seat-ids)]
-    (->> (range 1024)
-         (reduce (fn [{:keys [current-gap-start] :as result} n]
-                   (if (contains? seat-ids n)
-                     (assoc result :current-gap-start nil)
-                     (-> result
-                         (update :gaps assoc (or current-gap-start n) n)
-                         (assoc :current-gap-start (or current-gap-start n)))))
-                 {:gaps {}
-                  :current-gap-start nil})
-         :gaps)))
+    (:gaps (reduce (fn [{:keys [current-gap-start] :as result} n]
+                     (if (contains? seat-ids n)
+                       (assoc result :current-gap-start nil)
+                       (-> result
+                           (update :gaps assoc (or current-gap-start n) n)
+                           (assoc :current-gap-start (or current-gap-start n)))))
+                   {:gaps {}
+                    :current-gap-start nil}
+                   (range 1024)))))
 
 (defn small-gap?
   [[start end]]

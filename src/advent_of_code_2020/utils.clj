@@ -20,6 +20,15 @@
   [str]
   (Integer/parseInt str))
 
+(defn split-by-empty-lines
+  [lines]
+  (->> lines
+       (partition-by empty?)
+       (filter #(some seq %))))
+
 (comment
+  (= [["a" "z"] ["b"]]
+     (split-by-empty-lines ["a" "z" "" "" "b"]))
+  
   (-> {:a 1} keys set tap identity tap)
   (macroexpand '(tap (-> {:a 1} keys set))))

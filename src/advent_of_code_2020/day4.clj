@@ -3,17 +3,6 @@
             [clojure.set :as set]
             [clojure.string :as str]))
 
-(defn passport-separator?
-  [line-group]
-  (and (= 1 (count line-group))
-       (empty? (first line-group))))
-
-(defn split-passport-lines
-  [all-lines]
-  (->> all-lines
-       (partition-by empty?)
-       (remove passport-separator?)))
-
 (defn parse-line
   [line]
   (->> (str/split line #" ")
@@ -23,7 +12,7 @@
 (defn parse-lines
   [lines]
   (->> lines
-       split-passport-lines
+       utils/split-by-empty-lines
        (map (comp (partial apply merge)
                   (partial map parse-line)))))
 
