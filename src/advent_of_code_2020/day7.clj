@@ -68,8 +68,8 @@
       (dissoc contained-bags starting-color)
 
       :else
-      (let [contained (:contains (get rules color))
-            contained-quantities (->> contained
+      (let [contained-quantities (->> (get rules color)
+                                      :contains
                                       (map (juxt first
                                                  (comp #(* quantity %) second)))
                                       (into {}))]
