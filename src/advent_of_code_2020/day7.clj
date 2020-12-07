@@ -33,6 +33,12 @@
                    :contained-by {}}}
            (parse-bag-contents-rule color contents))))
 
+(defn parse-rules
+  [lines]
+  (->> lines
+       (map parse-line)
+       (apply merge-with merge-rules)))
+
 (defn find-all-containers
   [starting-color rules]
   (loop [traversed-colors #{}
@@ -53,8 +59,7 @@
 (defn part1-solution
   [lines]
   (->> lines
-       (map parse-line)
-       (apply merge-with merge-rules)
+       parse-rules
        (find-all-containers "shiny gold")
        count))
 
@@ -81,8 +86,7 @@
 (defn part2-solution
   [lines]
   (->> lines
-       (map parse-line)
-       (apply merge-with merge-rules)
+       parse-rules
        (all-contained-bags "shiny gold")
        vals
        (reduce + 0)))
