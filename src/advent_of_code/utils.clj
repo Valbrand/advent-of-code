@@ -18,7 +18,7 @@
 
 (defn parse-int
   [str]
-  (Integer/parseInt str))
+  (bigint str))
 
 (defn split-by-empty-lines
   [lines]
@@ -26,7 +26,28 @@
        (partition-by empty?)
        (filter #(some seq %))))
 
+(defn map-vals*
+  "Applies f to the values of a map, returns a lazy seq of the map entries"
+  [f m]
+  (map (juxt first (comp f second)) m))
+
+(defn map-vals
+  "Applies f to the values of a map, returns a map"
+  [f m]
+  (into {} (map-vals* f m)))
+
+(defn filter-vals*
+  "Filters map entries for which pred returns a truthy value. Returns a lazy seq of the entries"
+  [pred m]
+  (filter (comp pred second) m))
+
+(defn filter-vals
+  "Filters map entries for which pred returns a truthy value. Returns a map"
+  [pred m]
+  (into {} (filter-vals* pred m)))
+
 (comment
+  (map-vals inc {:a 1, :b 0})
   (do
     (defn plus! [& args]
       (println "plus!")
