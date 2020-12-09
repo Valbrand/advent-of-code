@@ -4,6 +4,10 @@
 (def forbidden-substrings-pattern #"(ab|cd|pq|xy)")
 (def double-letter-pattern #"(.)\1")
 
+(defn without-forbidden-substrings?
+  [s]
+  (nil? (re-find forbidden-substrings-pattern s)))
+
 (defn contains-double-letter?
   [s]
   (some? (re-find double-letter-pattern s)))
@@ -17,10 +21,9 @@
 
 (defn nice?
   [string]
-  (let [without-forbidden-substrings? (nil? (re-find forbidden-substrings-pattern string))]
-    (and without-forbidden-substrings?
-         (contains-double-letter? string)
-         (has-enough-vowels? string))))
+  (and (without-forbidden-substrings? string)
+       (contains-double-letter? string)
+       (has-enough-vowels? string)))
 
 (defn part1-solution
   [lines]
