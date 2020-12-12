@@ -2,10 +2,6 @@
   (:require [advent-of-code.utils :as utils]
             [clojure.string :as str]))
 
-(def matrix {:data    ["00" "01" "02" "10" "11" "12" "20" "21" "22"]
-             :rows    3
-             :columns 3})
-
 (defn coordinates->position
   [matrix [row col]]
   (+ (* (:columns matrix) row)
@@ -33,10 +29,11 @@
        (< col columns)))
 
 (defn adjacent-positions
-  [matrix position]
+  [matrix [row col]]
   (let [possible-adjacent-deltas [[-1 -1] [-1 0] [-1 1] [0 -1] [0 1] [1 -1] [1 0] [1 1]]]
     (->> possible-adjacent-deltas
-         (map #(map (comp (partial apply +) vector) % position))
+         (map (fn [[delta-row delta-col]]
+                [(+ delta-row row) (+ delta-col col)]))
          (filter (partial valid-position? matrix)))))
 
 (defn parse-matrix
@@ -62,70 +59,95 @@
   [tile-content]
   (= occupied-seat tile-content))
 
+(defn count-chars
+  [char coll]
+  (reduce (fn [acc ch]
+            (if (= ch char)
+              (inc acc)
+              acc))
+          0
+          coll))
+
 (defn next-tile-state
-  [matrix position]
+  [{:keys [positions-to-consider occupancy-limit]} matrix position]
   (let [current-tile-state (matrix-get matrix position)
-        adjacent-position-states (delay (->> position
-                                             (adjacent-positions matrix)
-                                             (map #(matrix-get matrix %))
-                                             frequencies))]
+        nearby-occupied-seats (->> (positions-to-consider matrix position)
+                                   (count-chars occupied-seat))]
     (cond
       (and (empty-seat? current-tile-state)
-           (zero? (get @adjacent-position-states occupied-seat 0)))
+           (zero? nearby-occupied-seats))
       occupied-seat
 
       (and (occupied-seat? current-tile-state)
-           (>= (get @adjacent-position-states occupied-seat 0) 4))
+           (>= nearby-occupied-seats occupancy-limit))
       empty-seat
 
       :else
       current-tile-state)))
 
 (defn next-matrix-state
-  [{:keys [rows columns] :as matrix}]
+  [config {:keys [rows columns] :as matrix}]
   (let [all-positions (for [i (range rows) j (range columns)]
                         [i j])]
-    (assoc matrix :data (mapv (partial next-tile-state matrix) all-positions))))
+    (assoc matrix :data (mapv (partial next-tile-state config matrix) all-positions))))
 
 (defn stable-matrix-state
-  [matrix]
+  [config matrix]
   (->> (range)
        (drop 1)
        (reductions (fn [[_ matrix] n]
-                     (let [next-state (next-matrix-state matrix)]
+                     (let [next-state (next-matrix-state config matrix)]
                        (if (= (:data matrix) (:data next-state))
                          (reduced [n next-state])
                          [n next-state])))
                    [0 matrix])
        last))
 
+(defn adjacent-positions-to-consider
+  [matrix position]
+  (map (partial matrix-get matrix) (adjacent-positions matrix position)))
+
 (defn part1-solution
   [matrix]
-  (let [[_ stable-state] (stable-matrix-state matrix)]
-    (-> stable-state
-        :data
-        frequencies
-        (get occupied-seat 0))))
+  (let [config           {:positions-to-consider adjacent-positions-to-consider
+                          :occupancy-limit       4}
+        [_ stable-state] (stable-matrix-state config matrix)]
+    (->> stable-state
+         :data
+         (count-chars occupied-seat))))
+
+(defn first-visible-seat
+  [matrix [position-row position-col] [delta-row delta-col]]
+  (loop [[row col :as position] [(+ position-row delta-row) (+ position-col delta-col)]]
+    (if (valid-position? matrix position)
+      (or (#{occupied-seat empty-seat} (matrix-get matrix position))
+          (recur [(+ row delta-row) (+ col delta-col)]))
+      nil)))
+
+(defn visible-seats-to-consider
+  [matrix position]
+  (let [directions [[-1 -1] [-1 0] [-1 1] [0 -1] [0 1] [1 -1] [1 0] [1 1]]]
+    (->> directions
+         (map (partial first-visible-seat matrix position))
+         (filter some?))))
+
+(defn part2-solution
+  [matrix]
+  (let [config           {:positions-to-consider visible-seats-to-consider
+                          :occupancy-limit       5}
+        [_ stable-state] (stable-matrix-state config matrix)]
+    (->> stable-state
+         :data
+         (count-chars occupied-seat))))
 
 (defn day-solution
   []
   (utils/with-lines "2020/day11.txt"
     (fn [lines]
       (let [matrix (parse-matrix lines)]
-        (utils/tap (part1-solution matrix)))))
+        (utils/tap (part1-solution matrix))
+        (utils/tap (part2-solution matrix)))))
   nil)
 
 (comment
-  (for [x (range -1 2) y (range -1 2) :when (or (not (zero? x)) (not (zero? y)))]
-    [x y])
-  (->> [1 1]
-       (adjacent-positions matrix)
-       (map (partial matrix-get matrix)))
-  
-  (print-matrix matrix)
-  
-  (->> [".LL" "LLL" "..."]
-       parse-matrix
-       next-matrix-state
-       next-matrix-state)
   (day-solution))
