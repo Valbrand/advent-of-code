@@ -28,6 +28,10 @@
     (bigint (.pow (biginteger base) power))
     (Math/pow base power)))
 
+(defn abs
+  [n]
+  (if (neg? n) (- n) n))
+
 (comment
   (class 2N)
   (pow 2N 3))
