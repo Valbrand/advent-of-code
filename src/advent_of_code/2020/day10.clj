@@ -22,35 +22,32 @@
     (* (get jolt-differences 1N)
        (get jolt-differences 3N))))
 
-(declare possible-arrangements)
-(defn possible-arrangements*
-  [group-lengths seq-length]
-  (cond
-    (< seq-length (apply min group-lengths))
-    1
-
-    :else
-    (->> group-lengths
-         ;; For each of possible group length `k` in `group-lengths`, we can have a group
-         ;; that starts at any index from 0 to `(- seq-length k)`.
-         ;; For example, with each dot representing an adapter (with a `seq-length` of 4):
-         ;; - (. .) . .
-         ;; - . (. .) .
-         ;; - . . (. .)
-         (map #(range 0 (inc (- seq-length %))))
-         flatten
-         ;; The recursion is used here to compute the possible arrangements for the
-         ;; adapters "to the right" of the formed group. In the first example above,
-         ;; we can have both "(. .) (. .)" and "(. .) . ."
-         (map #(possible-arrangements group-lengths %))
-         flatten
-         numbers/sum
-         ;; The increment takes into account the possibility 
-         ;; of not grouping any adapters at all. In the `(= seq-length 4)` example above,
-         ;; the increment accounts for the scenario ". . . ."
-         inc)))
-
-(def possible-arrangements (memoize possible-arrangements*))
+(def ^{:arglists '([group-lengths seq-length])}
+  possible-arrangements
+  (letfn [(possible-arrangements*
+            [group-lengths seq-length]
+            (if (< seq-length (apply min group-lengths))
+              1
+              (->> group-lengths
+                   ;; For each of possible group length `k` in `group-lengths`, we can have a group
+                   ;; that starts at any index from 0 to `(- seq-length k)`.
+                   ;; For example, with each dot representing an adapter (with a `seq-length` of 4):
+                   ;; - (. .) . .
+                   ;; - . (. .) .
+                   ;; - . . (. .)
+                   (map #(range 0 (inc (- seq-length %))))
+                   flatten
+                   ;; The recursion is used here to compute the possible arrangements for the
+                   ;; adapters "to the right" of the formed group. In the first example above,
+                   ;; we can have both "(. .) (. .)" and "(. .) . ."
+                   (map #(possible-arrangements group-lengths %))
+                   flatten
+                   numbers/sum
+                   ;; The increment takes into account the possibility 
+                   ;; of not grouping any adapters at all. In the `(= seq-length 4)` example above,
+                   ;; the increment accounts for the scenario ". . . ."
+                   inc)))]
+    (memoize possible-arrangements*)))
 
 (defn part2-solution
   [lines]
@@ -77,7 +74,8 @@
   (utils/with-lines "2020/day10.txt"
     (fn [lines]
       (utils/tap (part1-solution lines))
-      (utils/tap (part2-solution lines)))))
+      (utils/tap (part2-solution lines))))
+  nil)
 
 (comment
   (day-solution))
