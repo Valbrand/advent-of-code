@@ -86,17 +86,17 @@
       current-tile-state)))
 
 (defn next-matrix-state
-  [config {:keys [rows columns] :as matrix}]
+  [next-tile-state {:keys [rows columns] :as matrix}]
   (let [all-positions (for [i (range rows) j (range columns)]
                         [i j])]
-    (assoc matrix :data (mapv (partial next-tile-state config matrix) all-positions))))
+    (assoc matrix :data (mapv (partial next-tile-state matrix) all-positions))))
 
 (defn stable-matrix-state
-  [config matrix]
+  [next-tile-state matrix]
   (->> (range)
        (drop 1)
        (reductions (fn [[_ matrix] n]
-                     (let [next-state (next-matrix-state config matrix)]
+                     (let [next-state (next-matrix-state next-tile-state matrix)]
                        (if (= (:data matrix) (:data next-state))
                          (reduced [n next-state])
                          [n next-state])))
@@ -107,14 +107,20 @@
   [matrix position]
   (map (partial matrix-get matrix) (adjacent-positions matrix position)))
 
-(defn part1-solution
-  [matrix]
-  (let [config           {:positions-to-consider adjacent-positions-to-consider
-                          :occupancy-limit       4}
-        [_ stable-state] (stable-matrix-state config matrix)]
+(defn count-occupied-seats-in-stable-state
+  [next-tile-state matrix]
+  (let [[_ stable-state] (stable-matrix-state next-tile-state matrix)]
     (->> stable-state
          :data
          (count-chars occupied-seat))))
+
+(defn part1-solution
+  [matrix]
+  (count-occupied-seats-in-stable-state
+   (partial next-tile-state
+            {:positions-to-consider adjacent-positions-to-consider
+             :occupancy-limit       4})
+   matrix))
 
 (defn first-visible-seat
   [matrix [position-row position-col] [delta-row delta-col]]
@@ -133,12 +139,10 @@
 
 (defn part2-solution
   [matrix]
-  (let [config           {:positions-to-consider visible-seats-to-consider
-                          :occupancy-limit       5}
-        [_ stable-state] (stable-matrix-state config matrix)]
-    (->> stable-state
-         :data
-         (count-chars occupied-seat))))
+  (count-occupied-seats-in-stable-state
+   (partial next-tile-state {:positions-to-consider visible-seats-to-consider
+                             :occupancy-limit       5})
+   matrix))
 
 (defn day-solution
   []

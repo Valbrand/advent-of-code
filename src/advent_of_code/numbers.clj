@@ -32,6 +32,29 @@
   [n]
   (if (neg? n) (- n) n))
 
+(defn divisible?
+  [n by]
+  (zero? (mod n by)))
+
+(defn descending-numeric-compare
+  [a b]
+  (- b a))
+
+(defn extended-gcd
+  [a b]
+  (loop [[old-r old-s old-t] [a 1N 0N]
+         [r s t] [b 0N 1N]]
+    (if (zero? r)
+      [old-r old-s old-t]
+      (let [q (quot old-r r)
+            next-val (fn [old-val current-val]
+                       (- old-val (* q current-val)))]
+        (recur [r s t]
+               [(next-val old-r r)
+                (next-val old-s s)
+                (next-val old-t t)])))))
+
 (comment
+  (extended-gcd 18N 0N)
   (class 2N)
   (pow 2N 3))

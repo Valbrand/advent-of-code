@@ -2,6 +2,8 @@
   (:require [clojure.java.io :as java.io]
             [clojure.pprint :as pp]))
 
+(def digits-pattern #"\d+")
+
 (defn with-lines
   [path f]
   (with-open [rdr (java.io/reader (str "resources/" path))]
