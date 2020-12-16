@@ -54,6 +54,22 @@
                 (next-val old-s s)
                 (next-val old-t t)])))))
 
+(defn bitwise-and
+  [num & nums]
+  (bigint
+   (reduce (fn [result n]
+             (.and (biginteger n) result))
+           (biginteger num)
+           nums)))
+
+(defn bitwise-or
+  [num & nums]
+  (bigint
+   (reduce (fn [result n]
+             (.or (biginteger n) result))
+           (biginteger num)
+           nums)))
+
 (comment
   (extended-gcd 18N 0N)
   (class 2N)

@@ -19,8 +19,12 @@
        x-val#)))
 
 (defn parse-int
-  [str]
-  (bigint str))
+  ([s]
+   (bigint s))
+  ([s radix]
+   (case radix
+     2 (read-string (str "2r" s))
+     (Integer/parseInt s radix))))
 
 (defn split-by-empty-lines
   [lines]
@@ -48,7 +52,15 @@
   [pred m]
   (into {} (filter-vals* pred m)))
 
+(defn index-of
+  [item coll]
+  (->> coll
+       (map-indexed vector)
+       (filter (comp #{item} second))
+       ffirst))
+
 (comment
+  (index-of 1 [2 3 1])
   (map-vals inc {:a 1, :b 0})
   (do
     (defn plus! [& args]
