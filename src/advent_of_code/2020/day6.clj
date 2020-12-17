@@ -1,5 +1,5 @@
-(ns advent-of-code-2020.day6
-  (:require [advent-of-code-2020.utils :as utils]
+(ns advent-of-code.2020.day6
+  (:require [advent-of-code.utils :as utils]
             [clojure.set :as set]))
 
 (defn group-yes-answers
@@ -31,7 +31,7 @@
 
 (defn day-solution
   []
-  (utils/with-lines "resources/day6.txt"
+  (utils/with-lines "2020/day6.txt"
     (fn [lines]
       (utils/tap (part1-solution lines))
       (utils/tap (part2-solution lines))))

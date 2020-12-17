@@ -1,5 +1,5 @@
-(ns advent-of-code-2020.day7
-  (:require [advent-of-code-2020.utils :as utils]
+(ns advent-of-code.2020.day7
+  (:require [advent-of-code.utils :as utils]
             [clojure.set :as set]
             [clojure.string :as str]))
 
@@ -93,7 +93,7 @@
 
 (defn day-solution
   []
-  (utils/with-lines "resources/day7.txt"
+  (utils/with-lines "2020/day7.txt"
     (fn [lines]
       (utils/tap (part1-solution lines))
       (utils/tap (part2-solution lines))))

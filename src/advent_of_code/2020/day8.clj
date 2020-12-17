@@ -1,5 +1,5 @@
-(ns advent-of-code-2020.day8
-  (:require [advent-of-code-2020.utils :as utils]))
+(ns advent-of-code.2020.day8
+  (:require [advent-of-code.utils :as utils]))
 
 (def command-pattern #"^(nop|acc|jmp) ((?:\+|-)\d+)")
 
@@ -84,7 +84,7 @@
 
 (defn day-solution
   []
-  (utils/with-lines "resources/day8.txt"
+  (utils/with-lines "2020/day8.txt"
     (fn [lines]
       (utils/tap (part1-solution lines))
       (utils/tap (part2-solution lines))))
