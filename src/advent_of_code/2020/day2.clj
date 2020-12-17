@@ -1,5 +1,5 @@
-(ns advent-of-code-2020.day2
-  (:require [advent-of-code-2020.utils :as utils]))
+(ns advent-of-code.2020.day2
+  (:require [advent-of-code.utils :as utils]))
 
 (def line-pattern
   #"(\d+)-(\d+) ([a-z]): (.+)")
@@ -23,14 +23,11 @@
     (<= (:min policy) policy-char-count (:max policy))))
 
 (defn part1-solution
-  []
-  (let [path "resources/day2.txt"]
-    (utils/with-lines path
-      (fn [lines]
-        (->> lines
-             (map parse-part1-line)
-             (filter valid-part1-password?)
-             count)))))
+  [lines]
+  (->> lines
+       (map parse-part1-line)
+       (filter valid-part1-password?)
+       count))
 
 (defn parse-part2-line
   [raw-line]
@@ -56,15 +53,18 @@
     (not= index1-matches? index2-matches?)))
 
 (defn part2-solution
+  [lines]
+  (->> lines
+       (map parse-part2-line)
+       (filter valid-part2-password?)
+       count))
+
+(defn day-solution
   []
-  (let [path "resources/day2.txt"]
-    (utils/with-lines path
-      (fn [lines]
-        (->> lines
-             (map parse-part2-line)
-             (filter valid-part2-password?)
-             count)))))
+  (utils/with-lines "2020/day2.txt"
+    (fn [lines]
+      (utils/tap (part1-solution lines))
+      (utils/tap (part2-solution lines)))))
 
 (comment
-  (part1-solution)
-  (part2-solution))
+  (day-solution))
