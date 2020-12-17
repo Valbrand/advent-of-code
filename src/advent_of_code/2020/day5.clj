@@ -1,5 +1,5 @@
-(ns advent-of-code-2020.day5
-  (:require [advent-of-code-2020.utils :as utils]))
+(ns advent-of-code.2020.day5
+  (:require [advent-of-code.utils :as utils]))
 
 (defn binary-partition
   [{:keys [length] :as range} direction]
@@ -120,7 +120,7 @@
 
 (defn day-solution
   []
-  (utils/with-lines "resources/day5.txt"
+  (utils/with-lines "2020/day5.txt"
     (fn [lines]
       (utils/tap (part1-solution lines))
       (utils/tap (part2-solution lines))))
