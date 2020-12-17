@@ -1,5 +1,5 @@
-(ns advent-of-code-2020.day3
-  (:require [advent-of-code-2020.utils :as utils]))
+(ns advent-of-code.2020.day3
+  (:require [advent-of-code.utils :as utils]))
 
 (defn content-at-index
   [lines row column]
@@ -44,12 +44,11 @@
 
 (defn day-solution
   []
-  (let [path "resources/day3.txt"]
-    (utils/with-lines path
-      (fn [lines]
-        (let [lines-vector (vec lines)]
-          (println (str "Part1: " (part1-solution lines-vector)))
-          (println (str "Part2: " (part2-solution lines-vector))))))))
+  (utils/with-lines "2020/day3.txt"
+    (fn [lines]
+      (let [lines-vector (vec lines)]
+        (println (str "Part1: " (part1-solution lines-vector)))
+        (println (str "Part2: " (part2-solution lines-vector)))))))
 
 (comment
   (time (day-solution)))
