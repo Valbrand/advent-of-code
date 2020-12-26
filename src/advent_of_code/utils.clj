@@ -18,6 +18,13 @@
        (pp/pprint x-val#)
        x-val#)))
 
+(defn tap-reader
+  [x]
+  `(let [x-val# ~x]
+     (pp/pprint '~x)
+     (pp/pprint x-val#)
+     x-val#))
+
 (defn parse-int
   ([s]
    (bigint s))
@@ -58,6 +65,16 @@
        (map-indexed vector)
        (filter (comp #{item} second))
        ffirst))
+
+(defn lazy-cat*
+  [colls]
+  (if-let [[coll & rest] (seq colls)]
+    (lazy-cat coll (lazy-cat* rest))
+    colls))
+
+(defn singleton?
+  [coll]
+  (= 1 (count coll)))
 
 (comment
   (index-of 1 [2 3 1])
