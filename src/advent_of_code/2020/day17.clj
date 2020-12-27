@@ -86,22 +86,21 @@
                   (repeat (dec dimensions) [-1 0 1]))))
 
 (defn adjacent-spaces
-  [dimensions indices]
-  (let [possible-variations (variations-for-dimensions dimensions)]
+  [indices]
+  (let [possible-variations (variations-for-dimensions (count indices))]
     (map (fn [variation]
            (map + indices variation))
          possible-variations)))
 
 (defn states-to-be-computed
-  [{:keys [dimensions] :as m}]
+  [m]
   (let [active-spaces-in-map (set (keys (flatten-n-dimensional-map m)))
-        all-adjacent-spaces (utils/lazy-cat* (map (partial adjacent-spaces dimensions)
-                                                  active-spaces-in-map))]
+        all-adjacent-spaces (utils/lazy-cat* (map adjacent-spaces active-spaces-in-map))]
     (into active-spaces-in-map all-adjacent-spaces)))
 
 (defn next-space-state
-  [{:keys [dimensions] :as m} indices]
-  (let [adjacent-active-spaces (->> (adjacent-spaces dimensions indices)
+  [m indices]
+  (let [adjacent-active-spaces (->> (adjacent-spaces indices)
                                     (filter (comp some? (partial get-in m))))
         current-state (get-in m indices :inactive)]
     (match/match [current-state (count adjacent-active-spaces)]

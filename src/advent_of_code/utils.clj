@@ -68,9 +68,8 @@
 
 (defn lazy-cat*
   [colls]
-  (if-let [[coll & rest] (seq colls)]
-    (lazy-cat coll (lazy-cat* rest))
-    colls))
+  (when-let [[coll & rest] (seq colls)]
+    (lazy-cat coll (lazy-cat* rest))))
 
 (defn singleton?
   [coll]
