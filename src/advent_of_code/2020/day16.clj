@@ -99,7 +99,7 @@
         your-ticket-fields (map vector field-positions your-ticket)]
     (->> your-ticket-fields
          (filter (comp #(str/starts-with? % "departure") first))
-         (map second)
+         (map val)
          numbers/product)))
 
 (defn day-solution
