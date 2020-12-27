@@ -105,9 +105,7 @@
         current-state (get-in m indices :inactive)]
     (match/match [current-state (count adjacent-active-spaces)]
       [:active (:or 2 3)] :active
-      [:active _] :inactive
       [:inactive 3] :active
-      [:inactive _] :inactive
       :else :inactive)))
 
 (defn next-map-state
