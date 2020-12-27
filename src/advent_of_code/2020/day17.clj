@@ -1,5 +1,6 @@
 (ns advent-of-code.2020.day17
   (:require [advent-of-code.utils :as utils]
+            [taoensso.tufte :as tufte :refer [defnp fnp p profiled profile]]
             [clojure.core.match :as match]))
 
 (defn n-dimensional-map
@@ -40,19 +41,21 @@
                 m)))]
     (remove-val* m indices)))
 
+(defn flatten-n-dimensional-map*
+  [{:keys [dimensions] :as m}]
+  (if (= dimensions 1)
+    (->> (dissoc m :dimensions)
+         (map (juxt (comp list first) second)))
+    (->> (dissoc m :dimensions)
+         (map (fn [[idx inner-m]]
+                (map (fn [[inner-idx val]]
+                       [(cons idx inner-idx) val])
+                     (flatten-n-dimensional-map* inner-m))))
+         utils/lazy-cat*)))
+
 (defn flatten-n-dimensional-map
   [m]
-  (letfn [(flatten-n-dimensional-map* [{:keys [dimensions] :as m}]
-            (if (= dimensions 1)
-              (->> (dissoc m :dimensions)
-                   (map (juxt (comp list first) second)))
-              (->> (dissoc m :dimensions)
-                   (map (fn [[idx inner-m]]
-                          (map (fn [[inner-idx val]]
-                                 [(cons idx inner-idx) val])
-                               (flatten-n-dimensional-map* inner-m))))
-                   utils/lazy-cat*)))]
-    (into {} (flatten-n-dimensional-map* m))))
+  (into {} (flatten-n-dimensional-map* m)))
 
 (def active-state \#)
 
@@ -74,34 +77,38 @@
                  (parse-row m x-idx row))
                (n-dimensional-map dimensions))))
 
-(defn variations-for-dimensions
-  [dimensions]
-  (remove (partial apply = 0)
-          (reduce (fn [res deltas]
-                    (->> deltas
-                         (map (fn [partial-variation]
-                                (map #(conj % partial-variation) res)))
-                         utils/lazy-cat*))
-                  [[-1] [0] [1]]
-                  (repeat (dec dimensions) [-1 0 1]))))
+(def variations-for-dimensions
+  ^{:arglists '([dimensions])}
+  (letfn [(variations-for-dimensions* [dimensions]
+            (remove (partial apply = 0)
+                    (reduce (fn [res deltas]
+                              (->> deltas
+                                   (map (fn [partial-variation]
+                                          (map #(conj % partial-variation) res)))
+                                   utils/lazy-cat*))
+                            [[-1] [0] [1]]
+                            (repeat (dec dimensions) [-1 0 1]))))]
+    (memoize variations-for-dimensions*)))
 
 (defn adjacent-spaces
   [indices]
   (let [possible-variations (variations-for-dimensions (count indices))]
     (map (fn [variation]
-           (map + indices variation))
-         possible-variations)))
+           (mapv + indices variation))
+          possible-variations)))
 
 (defn states-to-be-computed
   [m]
-  (let [active-spaces-in-map (set (keys (flatten-n-dimensional-map m)))
-        all-adjacent-spaces (utils/lazy-cat* (map adjacent-spaces active-spaces-in-map))]
-    (into active-spaces-in-map all-adjacent-spaces)))
+  (let [active-spaces-in-map (map first (flatten-n-dimensional-map* m))
+        all-adjacent-spaces (->> active-spaces-in-map
+                                 (map adjacent-spaces)
+                                 utils/lazy-cat*)]
+    (into #{} (lazy-cat active-spaces-in-map all-adjacent-spaces))))
 
 (defn next-space-state
   [m indices]
   (let [adjacent-active-spaces (->> (adjacent-spaces indices)
-                                    (filter (comp some? (partial get-in m))))
+                                    (filterv #(some? (get-in m %))))
         current-state (get-in m indices :inactive)]
     (match/match [current-state (count adjacent-active-spaces)]
       [:active (:or 2 3)] :active
@@ -121,36 +128,34 @@
                      :else m)))
                m)))
 
-(defn part1-solution
+(defn state-after-cycles
+  [initial-map n]
+  (reduce (fn [m _] (next-map-state m))
+          initial-map
+          (repeat n nil)))
+
+(defnp part1-solution
   [lines]
   (let [m (parse-map 3 lines)]
-    (->> (reduce (fn [m _] (next-map-state m)) m (repeat 6 nil))
-         flatten-n-dimensional-map
+    (->> (state-after-cycles m 6)
+         flatten-n-dimensional-map*
          count)))
 
-(defn part2-solution
+(defnp part2-solution
   [lines]
   (let [m (parse-map 4 lines)]
-    (->> (reduce (fn [m _] (next-map-state m)) m (repeat 6 nil))
-         flatten-n-dimensional-map
+    (->> (state-after-cycles m 6)
+         flatten-n-dimensional-map*
          count)))
 
 (defn day-solution
   []
   (utils/with-lines "2020/day17.txt"
     (fn [lines]
-      #tap (time (part1-solution lines))
-      #tap (time (part2-solution lines))))
+      #tap (part1-solution lines)
+      #tap (part2-solution lines)))
   nil)
 
 (comment
-  (day-solution)
-  (adjacent-spaces [1 1 0])
-  (let [input [".#." "..#" "###"]
-        m (parse-map input)]
-    #tap (flatten-n-dimensional-map m)
-    #tap (flatten-n-dimensional-map (next-map-state m))
-    nil)
-  (states-to-be-computed (parse-map ["..." ".#." "..."]))
-
-  (set-val (n-dimensional-map 2) [0 0] :true))
+  (tufte/add-basic-println-handler! {})
+  (profile {} (day-solution)))
