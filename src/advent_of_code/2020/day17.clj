@@ -13,13 +13,11 @@
    (= (count indices) (:dimensions m))
    (format "Received indices for a %d-dimensional map, but input is a %d-dimensional map"
            (count indices) (:dimensions m)))
-  (letfn [(set-val* [m indices val]
-            (let [indices-dimensions (count indices)
-                  [idx & rest-indices] indices]
-              (if (= 1 indices-dimensions)
-                (assoc m idx val)
-                (update m idx (fnil set-val (n-dimensional-map (dec indices-dimensions))) rest-indices val))))]
-    (set-val* m indices val)))
+  (let [indices-dimensions (count indices)
+        [idx & rest-indices] indices]
+    (if (= 1 indices-dimensions)
+      (assoc m idx val)
+      (update m idx (fnil set-val (n-dimensional-map (dec indices-dimensions))) rest-indices val))))
 
 (defn remove-val
   [m indices]
@@ -27,19 +25,17 @@
    (= (count indices) (:dimensions m))
    (format "Received indices for a %d-dimensional map, but input is a %d-dimensional map"
            (count indices) (:dimensions m)))
-  (letfn [(remove-val* [m indices]
-            (let [indices-dimensions (count indices)
-                  [idx & rest-indices] indices]
-              (cond
-                (= 1 indices-dimensions)
-                (dissoc m idx)
+  (let [indices-dimensions (count indices)
+        [idx & rest-indices] indices]
+    (cond
+      (= 1 indices-dimensions)
+      (dissoc m idx)
 
-                (contains? m idx)
-                (update m idx remove-val rest-indices)
+      (contains? m idx)
+      (update m idx remove-val rest-indices)
 
-                :else
-                m)))]
-    (remove-val* m indices)))
+      :else
+      m)))
 
 (defn flatten-n-dimensional-map*
   [{:keys [dimensions] :as m}]
@@ -90,12 +86,13 @@
                             (repeat (dec dimensions) [-1 0 1]))))]
     (memoize variations-for-dimensions*)))
 
-(defn adjacent-spaces
-  [indices]
-  (let [possible-variations (variations-for-dimensions (count indices))]
-    (map (fn [variation]
-           (mapv + indices variation))
-          possible-variations)))
+(def ^{:arglists '([indices])} adjacent-spaces
+  (letfn [(adjacent-spaces* [indices]
+            (let [possible-variations (variations-for-dimensions (count indices))]
+              (map (fn [variation]
+                     (mapv + indices variation))
+                   possible-variations)))]
+    (memoize adjacent-spaces*)))
 
 (defn states-to-be-computed
   [m]
