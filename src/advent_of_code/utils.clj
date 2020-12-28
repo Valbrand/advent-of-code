@@ -75,6 +75,12 @@
   [coll]
   (= 1 (count coll)))
 
+(defn unchunk [s]
+  (when (seq s)
+    (lazy-seq
+     (cons (first s)
+           (unchunk (next s))))))
+
 (comment
   (index-of 1 [2 3 1])
   (map-vals inc {:a 1, :b 0})
