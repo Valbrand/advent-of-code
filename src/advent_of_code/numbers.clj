@@ -70,6 +70,14 @@
            (biginteger num)
            nums)))
 
+(defn parse-int
+  ([s]
+   (bigint s))
+  ([s radix]
+   (case radix
+     2 (read-string (str "2r" s))
+     (Integer/parseInt s radix))))
+
 (comment
   (extended-gcd 18N 0N)
   (class 2N)
