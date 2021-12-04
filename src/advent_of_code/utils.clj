@@ -1,8 +1,18 @@
 (ns advent-of-code.utils
-  (:require [clojure.java.io :as java.io]
-            [clojure.pprint :as pp]))
+  (:require [advent-of-code.numbers :as numbers]
+            [clojure.java.io :as java.io]
+            [clojure.pprint :as pp]
+            [clojure.string :as string]))
 
 (def digits-pattern #"\d+")
+
+(defn parse-integers-line
+  ([line]
+   (parse-integers-line line #" "))
+  ([line separator]
+   (->> (string/split line separator)
+        (remove empty?)
+        (map numbers/parse-int))))
 
 (defn with-lines
   [path f]
@@ -80,6 +90,14 @@
     (lazy-seq
      (cons (first s)
            (unchunk (next s))))))
+
+(defn find-first
+  [pred coll]
+  (first (drop-while (complement pred) coll)))
+
+(defn zip
+  [coll-a coll-b]
+  (map vector coll-a coll-b))
 
 (comment
   (index-of 1 [2 3 1])
