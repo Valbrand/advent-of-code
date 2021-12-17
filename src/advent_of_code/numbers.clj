@@ -78,6 +78,12 @@
      2 (read-string (str "2r" s))
      (Integer/parseInt s radix))))
 
+(defn char->int
+  [char]
+  {:pre (<= (int \0) (int char) (int \9))}
+  (- (int char)
+     (int \0)))
+
 (comment
   (extended-gcd 18N 0N)
   (class 2N)
