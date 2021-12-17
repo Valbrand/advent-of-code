@@ -14,7 +14,7 @@
         col-within-map? (fn col-within-map? [col]
                           (<= 0 col (dec (count (get depth-map row-idx)))))
         position-deltas [[-1 0] [0 1] [1 0] [0 -1]]]
-    (->> #break position-deltas
+    (->> position-deltas
          (map (fn [[row-delta col-delta]]
                 [(+ row-idx row-delta) (+ col-idx col-delta)]))
          (filter (fn [[row col]]
