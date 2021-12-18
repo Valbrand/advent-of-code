@@ -99,6 +99,17 @@
   [coll-a coll-b]
   (map vector coll-a coll-b))
 
+(defn median
+  "Guaranteed to work only for odd-sized collections"
+  ([coll]
+   (median coll false))
+  ([coll sorted?]
+   (let [coll (if sorted?
+                coll
+                (sort coll))
+         median-index (/ (count coll) 2)]
+     (nth coll median-index))))
+
 (comment
   (index-of 1 [2 3 1])
   (map-vals inc {:a 1, :b 0})
