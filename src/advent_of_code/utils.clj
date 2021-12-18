@@ -110,6 +110,29 @@
          median-index (/ (count coll) 2)]
      (nth coll median-index))))
 
+(defn queue
+  ([]
+   clojure.lang.PersistentQueue/EMPTY)
+  ([items]
+   (into (queue) items)))
+
+(defn cartesian-product
+  [xs ys]
+  (for [x xs, y ys]
+    [x y]))
+
+(defn surrounding-matrix-indices
+  [[base-x base-y] matrix]
+  (for [x (range (dec base-x) (+ 2 base-x))
+        y (range (dec base-y) (+ 2 base-y))
+        :when (and (>= x 0)
+                   (>= y 0)
+                   (or (not= x base-x)
+                       (not= y base-y))
+                   (< x (count matrix))
+                   (< y (count (get matrix x))))]
+    [x y]))
+
 (comment
   (index-of 1 [2 3 1])
   (map-vals inc {:a 1, :b 0})
