@@ -133,6 +133,15 @@
                    (< y (count (get matrix x))))]
     [x y]))
 
+(defmacro with-input
+  [f]
+  (let [[day year] (-> (str *ns*)
+                       (string/split #"\.")
+                       reverse)
+        path (str year "/" day ".txt")]
+    `(with-lines ~path
+       ~f)))
+
 (comment
   (index-of 1 [2 3 1])
   (map-vals inc {:a 1, :b 0})

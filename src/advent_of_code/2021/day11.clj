@@ -3,8 +3,11 @@
    
    This is a version of Conway's Game of life.
    
-   For part 1, maybe maintaining a queue of flashes
-   and iterating over it processing the cascading flashes will do."
+   For part 1, maintaining a set of flash positions
+   and iterating over it processing the cascading flashes will do.
+   
+   Part 2 requires nothing more than a way of checking 
+   if an energy map is synchronized."
   (:require [advent-of-code.utils :as utils]
             [advent-of-code.numbers :as numbers]
             [clojure.string :as string]))
@@ -75,10 +78,8 @@
         (->> lines
              parse-input
              (iterate state-after-step)
-             (drop 1)
              (take-while (complement synchronized?))
-             count
-             inc)))))
+             count)))))
 
 (comment
   (time (part1-solution))
