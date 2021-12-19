@@ -10,7 +10,5 @@
                     :edges #{"a"}}}
               (day12/parse-input ["a-B"]))))
 
-(deftest )
-
 (comment
   (clojure.test/run-tests))

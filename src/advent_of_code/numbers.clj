@@ -84,6 +84,8 @@
   (- (int char)
      (int \0)))
 
+(def safe-add (fnil + 0))
+
 (comment
   (extended-gcd 18N 0N)
   (class 2N)
