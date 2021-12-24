@@ -1,73 +1,51 @@
 (ns advent-of-code.2021.day15
   "Chitons
    
-   I'm thinking about taking an approach based on incrementally
-   updating the minimum cost to get to a certain coordinate. we go through
-   the entire matrix, and for each item we compute
-   
-   (+ (min (cost-of-neighbor-above) (cost-of-left-neighbor))
-      (cost-of-entering-current-coordinate))
-   
-   For the map
-   1 6 1 1 1
-   1 6 1 6 1
-   1 1 1 6 1
-   
-   The scores would be (the current iteration is marked with a > sign,
-   and updates are marked with a ! sign)
-   
-   >0 . . . .    0 >6 . . .    0 6 >7 . .    0 6 7 >8 .
-    . . . . . -> .  . . . . -> . .  . . . -> . . .  . . -> ...
-    . . . . .    .  . . . .    . .  . . .    . . .  . .
-   
-   0 6 7 8 >9     0 6 7 8 9    0  6 7 8 9    0 6  7 8 9
-   . . . .  . -> >1 . . . . -> 1 >7 . . . -> 1 7 >8 . . -> ...
-   . . . .  .     . . . . .    .  . . . .    . .  . . .
+   I had a really hard time with this one. At first I didn't
+   think a lot about the problem before trying to solve it and
+   didn't *actually* relate it with a shortest/minimum cost graph 
+   problem, and tried a really naive approach that would 
+   necessarily visit all nodes and do a lot of rework.
 
-   0 6 7  8  9    0 6 7 8   9      0 6 7 8  9
-   1 7 8 >14 . -> 1 7 8 14 >10 ->  1 7 8 14 10 -> ...
-   . . .  .  .    . . . .   .     >2 . . .  .
+   Later on I noticed I could solve this with djikstra/A*, but I
+   had trouble with the data structure itself. I tried sorted maps,
+   sorted sets, combinations between maps and sorted sets, but it was
+   still prohibitively slow.
 
-   0  6 7 8  9     0 6 !6 !7 !8    0 6 6  7  8    0 6 6 7   8
-   1  7 8 14 10 -> 1 7 !5 14 !9 -> 1 7 5  14 9 -> 1 7 5 14  9
-   2 >3 . .  .     2 3 >4 .  .     2 3 4 >10 .    2 3 4 10 >10
+   I ended up getting to an algorithm that works similarly to A*.
+   I keep track of a collection of map positions and the known 
+   best cost to reach that position, as well as a collection of 'frontier'
+   nodes to be visited that are the neighbors of the nodes that were
+   already visited. In each iteration, I visit the frontier node with
+   the smallest cost and update both collections. As the edges of the graph
+   implied by the cave-map are well structured and there are no positions
+   with negative cost, we can be sure that we won't ever need to
+   visit a node twice.
 
-   It seems good enough
+   So that left me with a choice: which data structure should I use?
+   I had two requirements:
+   1. I had to be able to discover the node with the lowest cost
+   2. I only needed to keep a mapping between nodes and the lowest known cost for them
 
-   ---
+   At first, I thought about using a heap-backed map, which would make
+   requirement 1 run in O(1) time complexity. However, insertions in
+   my implementation of the heap-map were O(n). Since each iteration
+   of the algorithm reads once and adds several times to the data
+   structure, I decided to go with a simple map instead.
 
-   The approach for part 1 is going to be based, again,
-   in a sorted map used as a heuristic to avoid exploring
-   paths that don't seem worth exploring.
+   I was still not satisfied with the results, so I used `taoensso.tufte` to profile
+   the code related to the heap and managed to get away from the unnecessarily
+   inefficient O(n) insertions. After the optimizations, `assoc` operations 
+   run in O(log n) - important since there are more `assoc`s than `pop`s - and
+   `pop` operations are still linear but far more efficient than before.
 
-   In the set, I'm going to keep 3-tuples containing:
-   [<cost so far> <distance to end> <path so far>]
-   and the elements of the tuple will be used as ordering
-   criteria, respectively.
-
-   in the map
-
-   199
-   111
-   991
-
-   the sequence of sets would be
-
-   #{[1 3 [[1 0]]], [9 3 [[0 1]]]}
-   #{[2 2 [[1 0] [1 1]]], [9 3 [0 1]], [10 2 [1 0] [2 0]]}
-   #{[3 1 [[1 0] [1 1] [1 2]]], [9 3 [0 1]], [10 1 [[1 0] [1 1] [2 1]]], [10 2 [[1 0] [2 0]]], [10 3 [[1 0] [1 1] [0 1]]]}
-   #{[4 0 [[1 0] [1 1] [1 2] [2 2]]]}
+   My first successful run of part 2 took 200s 😅 and the current 
+   implementation takes around 7s.
 "
   (:require [advent-of-code.utils :as utils]
             [advent-of-code.numbers :as numbers]
+            [advent-of-code.data-structures.heap :as heap]
             [clojure.string :as string]))
-
-(comment
-  (apply min-key
-         (comp first second)
-         {[1 0] [1 [[0 0]]]
-          [0 1] [9 [[0 0]]]})
-  )
 
 (defn parse-input
   [lines]
@@ -85,6 +63,11 @@
   [map]
   [(dec (map-height map))
    (dec (map-width map))])
+
+(defn steps-distance
+  [[x1 y1] [x2 y2]]
+  (+ (numbers/abs (- x1 x2))
+     (numbers/abs (- y1 y2))))
 
 (defn map-size
   [map]
@@ -104,34 +87,45 @@
 
 (defn compute-distances
   [cave-map]
-  (let [shortest-known-path (fn shortest-known-path*
-                              [to-visit]
-                              (apply min-key
-                                     (comp first second)
-                                     to-visit))]
-    (->> (iterate (fn [{:keys [distances to-visit]}]
-                    (let [[position [distance path]] (shortest-known-path to-visit)
-                          neighbors (->> (neighbor-positions cave-map position)
-                                         (remove #(contains? distances %)))]
-                      {:distances (assoc distances position [distance path])
-                       :to-visit  (reduce (fn [to-visit neighbor-position]
-                                            (let [new-distance     (+ distance
-                                                                      (get-in cave-map neighbor-position))
-                                                  [old-distance _] (get to-visit neighbor-position)]
-                                              (cond
-                                                #break (contains? to-visit neighbor-position)
-                                                (if (< new-distance old-distance)
-                                                  (assoc to-visit neighbor-position [new-distance (conj path position)])
-                                                  to-visit)
-
-                                                :else
-                                                (assoc to-visit neighbor-position [new-distance (conj path position)]))))
-                                          (dissoc to-visit position)
-                                          neighbors)}))
-                  {:distances {}
-                   :to-visit {[0 0] [0 []]}})
-         (map :distances)
-         (utils/take-until #(= (count %) (map-size cave-map))))))
+  (letfn [(to-visit-score [[cost step-distance]]
+            (+ cost step-distance))
+          (compare-fn [a b]
+            (compare (to-visit-score a) (to-visit-score b)))
+          (build-to-visit [to-visit-map]
+            (into (heap/heap-map-by compare-fn) to-visit-map))
+          (next-tile-to-visit [to-visit]
+            (peek to-visit))
+          (pop-to-visit [to-visit _]
+            (pop to-visit))
+          (include-in-to-visit? [to-visit position _]
+            (not (contains? to-visit position)))
+          (conj-to-visit [to-visit position distance tiles-distance]
+            (assoc to-visit position [distance tiles-distance]))]
+    (let [goal (map-goal cave-map)
+          initial-to-visit-map {[0 0] [0
+                                       (steps-distance [0 0] goal)]}]
+      (->> (iterate (fn [{:keys [distances to-visit]}]
+                      (let [[position [distance-so-far]] (next-tile-to-visit to-visit)
+                            new-distances (assoc distances position distance-so-far)
+                            new-to-visit (->> (neighbor-positions cave-map position)
+                                              (remove #(contains? distances %))
+                                              (reduce (fn reducer [to-visit neighbor-pos]
+                                                        (let [distance-to-neighbor (+ (get-in cave-map neighbor-pos)
+                                                                                      distance-so-far)]
+                                                          (if (include-in-to-visit? to-visit neighbor-pos distance-to-neighbor)
+                                                            (conj-to-visit to-visit
+                                                                           neighbor-pos
+                                                                           distance-to-neighbor
+                                                                           (steps-distance neighbor-pos goal))
+                                                            to-visit)))
+                                                      (pop-to-visit to-visit position)))]
+                        {:distances new-distances
+                         :to-visit new-to-visit}))
+                    {:distances {}
+                     :to-visit (build-to-visit initial-to-visit-map)})
+           (map :distances)
+           (utils/take-until #(= (map-size cave-map)
+                                 (count %)))))))
 
 (defn part1-solution
   []
@@ -142,15 +136,39 @@
             distances-map (->> cave-map
                                compute-distances
                                (utils/find-first #(contains? % goal)))]
-        (-> distances-map
-            (get goal)
-            first)))))
+        (get distances-map goal)))))
+
+(defn expand-map
+  "Expands a cave map into a 5x larger map (in
+   both dimensions) with incrementing costs for
+   similar positions"
+  [cave-map]
+  (let [next-map-row-state (fn [map-row]
+                             (mapv #(inc (mod % 9)) map-row))]
+    (into []
+          (comp (take 5)
+                (mapcat (fn [cave-map]
+                          (->> cave-map
+                               (mapv (fn [map-row]
+                                       (->> map-row
+                                            (iterate next-map-row-state)
+                                            (take 5)
+                                            flatten
+                                            (into []))))))))
+          (iterate (fn [cave-map]
+                     (mapv next-map-row-state cave-map))
+                   cave-map))))
 
 (defn part2-solution
   []
   (utils/with-input
     (fn [lines]
-      )))
+      (let [cave-map (expand-map (parse-input lines))
+            goal (map-goal cave-map)
+            distances-map (->> cave-map
+                               compute-distances
+                               (utils/find-first #(contains? % goal)))]
+        (get distances-map goal)))))
 
 (comment
   (time (part1-solution))
