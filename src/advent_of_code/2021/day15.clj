@@ -40,7 +40,8 @@
    `pop` operations are still linear but far more efficient than before.
 
    My first successful run of part 2 took 200s 😅 and the current 
-   implementation takes around 7s.
+   implementation takes around 7s. Implementing the data structure
+   behind the solution was, as expected, very complex but also very fun.
 "
   (:require [advent-of-code.utils :as utils]
             [advent-of-code.numbers :as numbers]
@@ -106,7 +107,7 @@
           initial-to-visit-map {[0 0] [0
                                        (steps-distance [0 0] goal)]}]
       (->> (iterate (fn [{:keys [distances to-visit]}]
-                      (let [[position [cost-so-far _ path]] (next-tile-to-visit to-visit)
+                      (let [[position [cost-so-far]] (next-tile-to-visit to-visit)
                             new-distances (assoc distances position cost-so-far)
                             new-to-visit (->> (neighbor-positions cave-map position)
                                               (remove #(contains? distances %))
@@ -120,8 +121,6 @@
                                                                            (steps-distance neighbor-pos goal))
                                                             to-visit)))
                                                       (pop-to-visit to-visit position)))]
-                        (when (contains? new-to-visit nil)
-                          #break (inc 1))
                         {:distances new-distances
                          :to-visit new-to-visit}))
                     {:distances {}
@@ -176,7 +175,5 @@
 (comment
   (time (part1-solution))
   (time (part2-solution))
-
-  (clojure.pprint/pprint (part1-solution))
 
   *e)

@@ -181,20 +181,21 @@
   (assocEx [this k v]
     (let [_ (.assocEx inner-map k v)]
       (assoc this k v)))
-  (without [_ k]
-    (let [new-inner-map (dissoc inner-map k)]
-      (HeapMap. new-inner-map
-                (if (contains? inner-map k)
-                  (let [elements (.elements v-heap)
-                        idx-to-remove (index-of (.elements v-heap) k)
-                        new-count (dec (count elements))]
-                    (VectorHeap. (-> (swap-elements elements idx-to-remove new-count)
-                                     (subvec 0 new-count)
-                                     (sift-down compare-fn idx-to-remove))
-                                 (heap-map-compare new-inner-map
-                                                   compare-fn)))
-                  v-heap)
-                compare-fn)))
+  (without [this k]
+    (if (contains? inner-map k)
+      (let [new-inner-map (dissoc inner-map k)
+            new-compare-fn (heap-map-compare new-inner-map
+                                             compare-fn)
+            elements (.elements v-heap)
+            idx-to-remove (index-of elements k)
+            new-count (dec (count elements))]
+        (HeapMap. new-inner-map
+                  (VectorHeap. (-> (swap-elements elements idx-to-remove new-count)
+                                   (subvec 0 new-count)
+                                   (sift-down new-compare-fn idx-to-remove))
+                               new-compare-fn)
+                  compare-fn))
+      this))
   (containsKey [_ key]
     (contains? inner-map key))
   (entryAt [_ key]
@@ -205,13 +206,14 @@
                                            compare-fn)
           elements (.elements v-heap)]
       (if (contains? inner-map k)
-        (let [k-idx (index-of (.elements v-heap) k)
-              old-v (get inner-map k)
+        (let [old-v (get inner-map k)
               sift-fn (if (pos? (compare-fn old-v v))
                         sift-up
                         sift-down)]
           (HeapMap. new-inner-map
-                    (VectorHeap. (sift-fn elements new-compare-fn k-idx)
+                    (VectorHeap. (sift-fn elements
+                                          new-compare-fn
+                                          (index-of (.elements v-heap) k))
                                  new-compare-fn)
                     compare-fn))
         (HeapMap. new-inner-map
