@@ -97,28 +97,31 @@
             (peek to-visit))
           (pop-to-visit [to-visit _]
             (pop to-visit))
-          (include-in-to-visit? [to-visit position _]
-            (not (contains? to-visit position)))
-          (conj-to-visit [to-visit position distance tiles-distance]
-            (assoc to-visit position [distance tiles-distance]))]
+          (include-in-to-visit? [to-visit position cost]
+            (or (not (contains? to-visit position))
+                (< cost (first (get to-visit position)))))
+          (conj-to-visit [to-visit position cost tiles-distance]
+            (assoc to-visit position [cost tiles-distance]))]
     (let [goal (map-goal cave-map)
           initial-to-visit-map {[0 0] [0
                                        (steps-distance [0 0] goal)]}]
       (->> (iterate (fn [{:keys [distances to-visit]}]
-                      (let [[position [distance-so-far]] (next-tile-to-visit to-visit)
-                            new-distances (assoc distances position distance-so-far)
+                      (let [[position [cost-so-far _ path]] (next-tile-to-visit to-visit)
+                            new-distances (assoc distances position cost-so-far)
                             new-to-visit (->> (neighbor-positions cave-map position)
                                               (remove #(contains? distances %))
                                               (reduce (fn reducer [to-visit neighbor-pos]
-                                                        (let [distance-to-neighbor (+ (get-in cave-map neighbor-pos)
-                                                                                      distance-so-far)]
-                                                          (if (include-in-to-visit? to-visit neighbor-pos distance-to-neighbor)
+                                                        (let [cost-to-neighbor (+ (get-in cave-map neighbor-pos)
+                                                                                  cost-so-far)]
+                                                          (if (include-in-to-visit? to-visit neighbor-pos cost-to-neighbor)
                                                             (conj-to-visit to-visit
                                                                            neighbor-pos
-                                                                           distance-to-neighbor
+                                                                           cost-to-neighbor
                                                                            (steps-distance neighbor-pos goal))
                                                             to-visit)))
                                                       (pop-to-visit to-visit position)))]
+                        (when (contains? new-to-visit nil)
+                          #break (inc 1))
                         {:distances new-distances
                          :to-visit new-to-visit}))
                     {:distances {}
@@ -173,5 +176,7 @@
 (comment
   (time (part1-solution))
   (time (part2-solution))
+
+  (clojure.pprint/pprint (part1-solution))
 
   *e)

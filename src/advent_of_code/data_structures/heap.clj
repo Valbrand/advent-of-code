@@ -105,24 +105,12 @@
            (recur (swap-elements elements idx min-child-idx) compare-fn (dec idx))
            (recur elements compare-fn (dec idx))))))))
 
-(defprotocol ^:private EditableHeap
-  (with-compare-fn [_ compare-fn])
-  (update-elements [_ update-fn]))
-
 (deftype VectorHeap
   [elements compare-fn]
 
   Object
   (toString [this]
     (str "VectorHeap<" (seq this) ">"))
-
-  EditableHeap
-  (with-compare-fn [_ new-compare-fn]
-    (VectorHeap. (build-min-heap elements new-compare-fn)
-                 new-compare-fn))
-  (update-elements [_ update-fn]
-    (VectorHeap. (build-min-heap (update-fn elements) compare-fn)
-                 compare-fn))
 
   clojure.lang.IPersistentCollection
   (count [_]
@@ -160,8 +148,7 @@
 
 (defn min-heap
   [& elements]
-  (into (VectorHeap. [] compare)
-        elements))
+  (apply min-heap-by compare elements))
 
 (defn- heap-map-compare
   ([]
@@ -212,17 +199,27 @@
     (contains? inner-map key))
   (entryAt [_ key]
     (.entryAt inner-map key))
-  (assoc [_ k v]
+  (assoc [this k v]
     (let [new-inner-map (assoc inner-map k v)
           new-compare-fn (heap-map-compare new-inner-map
                                            compare-fn)
           elements (.elements v-heap)]
-      (HeapMap. new-inner-map
-                (VectorHeap. (-> elements
-                                 (conj k)
-                                 (sift-up new-compare-fn (count elements)))
-                             new-compare-fn)
-                compare-fn)))
+      (if (contains? inner-map k)
+        (let [k-idx (index-of (.elements v-heap) k)
+              old-v (get inner-map k)
+              sift-fn (if (pos? (compare-fn old-v v))
+                        sift-up
+                        sift-down)]
+          (HeapMap. new-inner-map
+                    (VectorHeap. (sift-fn elements new-compare-fn k-idx)
+                                 new-compare-fn)
+                    compare-fn))
+        (HeapMap. new-inner-map
+                  (VectorHeap. (-> elements
+                                   (conj k)
+                                   (sift-up new-compare-fn (count elements)))
+                               new-compare-fn)
+                  compare-fn))))
   (valAt [_ key]
     (get inner-map key))
   (valAt [_ key not-found]
@@ -256,16 +253,6 @@
                              (heap-map-compare new-inner-map compare-fn))
                 compare-fn))))
 
-(defn heap-map
-  [& keyvals]
-  {:pre (even? (count keyvals))}
-  (reduce (fn [m [k v]]
-            (assoc m k v))
-          (HeapMap. {}
-                    (min-heap-by (heap-map-compare))
-                    compare)
-          (partition 2 keyvals)))
-
 (defn heap-map-by
   [compare-fn & keyvals]
   {:pre (even? (count keyvals))}
@@ -275,3 +262,8 @@
                     (min-heap-by (heap-map-compare compare-fn))
                     compare-fn)
           (partition 2 keyvals)))
+
+(defn heap-map
+  [& keyvals]
+  {:pre (even? (count keyvals))}
+  (apply heap-map-by compare keyvals))
