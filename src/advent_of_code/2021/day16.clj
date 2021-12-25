@@ -1,5 +1,9 @@
 (ns advent-of-code.2021.day16
-  "Packet Decoder"
+  "Packet Decoder
+   
+   The solution for day 16 was a very straightforward
+   implementation of the problem description. No pitfalls
+   found during implementation."
   (:require [advent-of-code.utils :as utils]
             [advent-of-code.numbers :as numbers]
             [clojure.string :as string]))
@@ -143,7 +147,7 @@
 (defn decode-packet
   [bit-seq]
   (let [[{:packet/keys [type] :as header} bit-seq] (decode-packet-header bit-seq)
-        decode-fn #break (packet-type->body-decoder type)
+        decode-fn (packet-type->body-decoder type)
         [packet bit-seq] (decode-fn header bit-seq)]
     [packet
      bit-seq]))
